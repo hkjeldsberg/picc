@@ -1,0 +1,36 @@
+
+# Idea for porject structure
+# TODOS:
+1. Implement auth
+2. Add album functionality
+3. Add face recognition 
+4. Setup db with firebase
+5. Setup CI/CD
+6. Add unit tests
+7. Add integration tests
+8. Setup backend (Python)
+
+
+lib/
+├── main.dart                 # Entry point of the app
+├── app/
+│   ├── app.dart              # App-level configurations (themes, routes)
+│   └── router.dart           # Route definitions
+├── features/
+│   ├── authentication/       # Authentication-related code
+│   │   ├── data/             # Repositories for user auth
+│   │   ├── presentation/     # Login, register screens
+│   │   └── state/            # State management for auth
+│   ├── albums/               # Album and photo-related features
+│   │   ├── data/             # Repositories for album/photo storage
+│   │   ├── presentation/     # UI for gallery, photo viewer
+│   │   └── state/            # State management for albums
+│   ├── face_recognition/     # Face recognition features
+│   │   ├── data/             # Platform channel/native integrations
+│   │   ├── presentation/     # Face tagging UI
+│   │   └── state/            # State management for recognition
+├── shared/                   # Shared widgets, utilities, and styles
+│   ├── widgets/              # Common UI components (buttons, modals)
+│   ├── services/             # API clients, Firebase services
+│   └── constants.dart        # App-wide constants
+
