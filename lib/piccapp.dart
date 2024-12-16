@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'homepage.dart';
+import 'home_page.dart';
 
 class PiccApp extends StatelessWidget {
   const PiccApp({super.key});
@@ -11,6 +11,7 @@ class PiccApp extends StatelessWidget {
       title: 'Picture App v0.0.4',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const HomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

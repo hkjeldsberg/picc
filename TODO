@@ -1,0 +1,27 @@
+TODOs
+
+HomePage
+- Add thumbnail to albums + text + styling
+- Sort albums on date or alphabetically
+- Add filter option
+
+AlbumPage
+- Fetch photos on album ID
+- Setup Firebase storage (?)
+- Store photos with album ID
+- Add upload option (+ local photos + camera)
+- Zoom / fit to width for thumbnails
+- On pressed picture: Display image
+- Extract metadata from pictures? (location, date taken)
+
+ProfilePage
+- Add login (email+pass)
+- Page: email (username) and change password option
+- Simple stats: #albums, #picutres
+
+Search
+- Add Face recognition suggestions
+- Search on tags, dates, places
+
+General
+- Styling

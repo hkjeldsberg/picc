@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "106249513096",
+    "project_id": "piccapp-d15bc",
+    "storage_bucket": "piccapp-d15bc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:106249513096:android:27998f36422ae196be973d",
+        "android_client_info": {
+          "package_name": "no.picc.picc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByCMm0exjlmdaV7zU-nqLSheO5Rp8H0s0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

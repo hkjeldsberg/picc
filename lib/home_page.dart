@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'albumpage.dart';
+import 'package:uuid/uuid.dart';
+import 'album_page.dart';
+import 'model/album.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,7 +28,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Map<String, dynamic>> albums = [];
+  List<Album> albums = [];
+  final Uuid uuid = Uuid();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAlbums(); // Fetch albums on app startup
+  }
 
   void _showAddAlbumDialog() {
     TextEditingController albumController = TextEditingController();
@@ -45,31 +55,33 @@ class _HomePageState extends State<HomePage> {
                   },
                   child: const Text("Cancel")),
               TextButton(
-                  onPressed: () {
-                    if (albumController.text.isNotEmpty) {
-                      setState(() {
-                        albums = [
-                          ...albums,
-                          {"name": albumController.text, "pictures": []}
-                        ];
-                      });
-                    }
+                onPressed: () {
+                  final albumName = albumController.text.trim();
+                  if (albumName.isNotEmpty) {
+                    _addAlbumToFirestore(albumName);
                     Navigator.of(context).pop();
-                  },
-                  child: const Text("Add"))
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Album name cannot be empty')),
+                    );
+                  }
+                },
+                child: const Text("Add"),
+              ),
             ],
           );
         });
   }
 
-  void _navigateToAlbum(BuildContext context, Map<String, dynamic> album) {
+  void _navigateToAlbum(BuildContext context, Album album) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => AlbumPage(album: album)),
     );
   }
 
-  Widget _createAlbumWidget(Map<String, dynamic> album) {
+  Widget _createAlbumWidget(Album album) {
     return GestureDetector(
       onTap: () => _navigateToAlbum(context, album),
       child: Container(
@@ -79,7 +91,7 @@ class _HomePageState extends State<HomePage> {
         ),
         child: Center(
           child: Text(
-            album["name"],
+            album.albumName,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
@@ -92,6 +104,7 @@ class _HomePageState extends State<HomePage> {
     const int crossAxisCount = 2;
     const double crossAxisSpacing = 2;
     const double mainAxisSpacing = 2;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Album app'),
@@ -114,5 +127,46 @@ class _HomePageState extends State<HomePage> {
         BottomNavigationBarItem(label: "Profile", icon: Icon(Icons.person)),
       ]),
     );
+  }
+
+  Future<void> _fetchAlbums() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance.collection(
+          'albums').get();
+      final fetchedAlbums = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return Album(
+          albumId: data['albumId'],
+          albumName: data['albumName'],
+          pictures: List<String>.from(data['pictures'] ?? []),
+        );
+      }).toList();
+
+      setState(() {
+        albums = fetchedAlbums;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching albums: $e')),
+      );
+    }
+  }
+
+  Future<void> _addAlbumToFirestore(String albumName) async {
+    final albumId = uuid.v4();
+    try {
+      await FirebaseFirestore.instance.collection('albums').doc(albumId).set({
+        'albumId': albumId,
+        'albumName': albumName,
+        'pictures': [],
+      });
+      setState(() {
+        albums.add(Album(albumId: albumId, albumName: albumName));
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding album: $e')),
+      );
+    }
   }
 }
