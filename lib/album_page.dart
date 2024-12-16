@@ -121,30 +121,38 @@ class _AlbumPageState extends State<AlbumPage> {
                 tag: imageUrl, // Use Hero animation for a smooth transition
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
+                    border: Border.all(color: Colors.black),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Image.network(
-                    imageUrl,
-                    loadingBuilder: (BuildContext context, Widget child,
-                        ImageChunkEvent? loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                              : null,
-                        ),
-                      );
-                    },
-                    fit: BoxFit.cover,
-                  ),
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      // Same radius as the container
+
+                      child: Image.network(
+                        imageUrl,
+                        loadingBuilder: (BuildContext context, Widget child,
+                            ImageChunkEvent? loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
+                        fit: BoxFit.cover,
+                      )),
                 ),
               ),
             );
           }).toList(),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => {_showPicker(context: context)},
+        child: const Icon(Icons.add_a_photo),
       ),
     );
   }

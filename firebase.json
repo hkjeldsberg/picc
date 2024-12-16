@@ -1,1 +1,31 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"piccapp-d15bc","appId":"1:106249513096:android:27998f36422ae196be973d","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"piccapp-d15bc","appId":"1:106249513096:ios:3d0f9031695e0b8dbe973d","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"piccapp-d15bc","appId":"1:106249513096:ios:3d0f9031695e0b8dbe973d","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"piccapp-d15bc","configurations":{"android":"1:106249513096:android:27998f36422ae196be973d","ios":"1:106249513096:ios:3d0f9031695e0b8dbe973d","macos":"1:106249513096:ios:3d0f9031695e0b8dbe973d","web":"1:106249513096:web:bb63b32da6935a89be973d","windows":"1:106249513096:web:7eadca4c10388c0cbe973d"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "picc-app",
+          "appId": "1:936231756061:android:cee7cb149ef8a002f701f4",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "picc-app",
+          "appId": "1:936231756061:ios:52df2f071830c1f5f701f4",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "picc-app",
+          "configurations": {
+            "android": "1:936231756061:android:cee7cb149ef8a002f701f4",
+            "ios": "1:936231756061:ios:52df2f071830c1f5f701f4",
+            "web": "1:936231756061:web:f74babeb5164cae5f701f4"
+          }
+        }
+      }
+    }
+  }
+}

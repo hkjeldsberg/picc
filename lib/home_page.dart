@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'album_page.dart';
 import 'model/album.dart';
+import 'package:logger/logger.dart';
+
+var logger = Logger(printer: PrettyPrinter(methodCount: 0));
 
 void main() {
   runApp(const MyApp());
@@ -84,18 +88,17 @@ class _HomePageState extends State<HomePage> {
   Widget _createAlbumWidget(Album album) {
     return GestureDetector(
       onTap: () => _navigateToAlbum(context, album),
+      onLongPress: () => _showAlbumOptionsMenu(context, album),
       child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Text(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black, width: 2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+              child: Text(
             album.albumName,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+          ))),
     );
   }
 
@@ -131,8 +134,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _fetchAlbums() async {
     try {
-      final querySnapshot = await FirebaseFirestore.instance.collection(
-          'albums').get();
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('albums').get();
       final fetchedAlbums = querySnapshot.docs.map((doc) {
         final data = doc.data();
         return Album(
@@ -168,5 +171,64 @@ class _HomePageState extends State<HomePage> {
         SnackBar(content: Text('Error adding album: $e')),
       );
     }
+  }
+
+  Future<void> _showAlbumOptionsMenu(BuildContext context, Album album) async {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    logger.d("Pressed long");
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(
+          overlay.localToGlobal(Offset.zero),
+          overlay.localToGlobal(Offset.zero),
+        ),
+        Offset.zero & overlay.size,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
+        _buildMenuItem(
+          text: 'Edit name',
+          icon: Icons.edit,
+          onTap: () {
+            _editAlbumName(context, album);
+          },
+        ),
+        _buildMenuItem(
+          text: 'Delete album',
+          icon: Icons.delete_outline,
+          onTap: () {
+            _deleteAlbum(context, album);
+          },
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem _buildMenuItem({
+    required String text,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return PopupMenuItem(
+      onTap: onTap,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(text, style: const TextStyle(fontSize: 16)),
+          Icon(icon, size: 20, color: Colors.black54),
+        ],
+      ),
+    );
+  }
+
+  void _editAlbumName(BuildContext context, Album album) {
+    logger.d("Editing name");
+  }
+
+  void _deleteAlbum(BuildContext context, Album album) {
+    logger.d("Deleting album");
   }
 }
