@@ -1,13 +1,11 @@
-import 'dart:math';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
+
 import 'album_page.dart';
 import 'model/album.dart';
-import 'package:logger/logger.dart';
 
 var logger = Logger(printer: PrettyPrinter(methodCount: 0));
 

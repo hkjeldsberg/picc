@@ -1,16 +1,37 @@
-# picc
+# Album app
 
-A new Flutter project.
+TODOs
 
-## Getting Started
+HomePage
+[X] Add thumbnail to albums + text + styling
+[ ] Sort albums on date or alphabetically
+[ ] Add filter option
+[x] Add delete album option
+[x] Add edit album name option
 
-This project is a starting point for a Flutter application.
+AlbumPage
+[x] Fetch photos on album ID
+[x] Setup Firebase storage (?)
+[x] Store photos with album ID
+[ ] Add upload option (+ local photos + camera)
+[x] Zoom / fit to width for thumbnails
+[x] On pressed picture: Display image
+[ ] Extract metadata from pictures? (location, date taken)
+[ ] Add delete picture option
 
-A few resources to get you started if this is your first Flutter project:
+PicturePage
+[ ] Swipe between pictures
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+ProfilePage
+[x] Add login (email+pass)
+[ ] Page: email (username) and change password option
+[ ] Simple stats: #albums, #picutres
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Search
+[ ] Add Face recognition suggestions
+[ ] Search on tags, dates, places
+
+General
+[ ] Styling
+[x] Cache images
+

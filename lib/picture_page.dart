@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class PicturePage extends StatelessWidget {
@@ -17,26 +18,17 @@ class PicturePage extends StatelessWidget {
       body: Center(
         child: InteractiveViewer(
           panEnabled: false,
-
           minScale: 1,
           maxScale: 10,
           child: Hero(
               tag: imageUrl,
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                loadingBuilder: (BuildContext context, Widget child,
-                    ImageChunkEvent? loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  );
-                },
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                width: double.infinity,
+                progressIndicatorBuilder: (context, url, progress) => Center(
+                  child: CircularProgressIndicator(value: progress.progress),
+                ),
+                fit: BoxFit.cover,
               )),
         ),
       ),
