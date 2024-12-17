@@ -4,8 +4,8 @@ HomePage
 [ ] Add thumbnail to albums + text + styling
 [ ] Sort albums on date or alphabetically
 [ ] Add filter option
-[ ] Add delete album option
-[ ] Add edit album name option
+[x] Add delete album option
+[x] Add edit album name option
 
 AlbumPage
 [x] Fetch photos on album ID
@@ -15,9 +15,10 @@ AlbumPage
 [x] Zoom / fit to width for thumbnails
 [x] On pressed picture: Display image
 [ ] Extract metadata from pictures? (location, date taken)
+[ ] Add delete picture option
 
 ProfilePage
-[ ] Add login (email+pass)
+[x] Add login (email+pass)
 [ ] Page: email (username) and change password option
 [ ] Simple stats: #albums, #picutres
 
