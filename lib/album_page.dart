@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -118,34 +119,30 @@ class _AlbumPageState extends State<AlbumPage> {
                     ));
               },
               child: Hero(
-                tag: imageUrl, // Use Hero animation for a smooth transition
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      // Same radius as the container
-
-                      child: Image.network(
-                        imageUrl,
-                        loadingBuilder: (BuildContext context, Widget child,
-                            ImageChunkEvent? loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
+                  tag: imageUrl, // Use Hero animation for a smooth transition
+                  child: Stack(children: [
+                    Center(
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          // Same radius as the container
+                          child: CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            width: double.infinity,
+                            progressIndicatorBuilder:
+                                (context, url, progress) => Center(
+                              child: CircularProgressIndicator(
+                                  value: progress.progress),
                             ),
-                          );
-                        },
-                        fit: BoxFit.cover,
-                      )),
-                ),
-              ),
+                            fit: BoxFit.cover,
+                          )),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ])),
             );
           }).toList(),
         ),

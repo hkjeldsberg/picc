@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -98,9 +99,10 @@ class _HomePageState extends State<HomePage> {
                     alignment: Alignment.center,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(album.pictures[0],
-                          fit: BoxFit.cover,
+                      child: CachedNetworkImage(
+                          imageUrl: album.pictures[0],
                           width: double.infinity,
+                          fit: BoxFit.cover,
                           color: const Color.fromRGBO(255, 255, 255, .5),
                           colorBlendMode: BlendMode.modulate),
                     ))
