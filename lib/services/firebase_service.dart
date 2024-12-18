@@ -9,22 +9,29 @@ import '../model/album.dart';
 var logger = Logger(printer: SimplePrinter());
 
 class FirebaseService {
+  static const String albumsCollection = 'albums';
+
   Future<void> addAlbum(String albumId, String albumName) async {
     try {
-      await FirebaseFirestore.instance.collection('albums').doc(albumId).set({
+      await FirebaseFirestore.instance
+          .collection(albumsCollection)
+          .doc(albumId)
+          .set({
         'albumId': albumId,
         'albumName': albumName,
         'pictures': [],
       });
     } catch (e) {
-      throw Exception('Error adding album: $e');
+      final String message = "Failed to add album: $e";
+      logger.e(message);
+      throw Exception(message);
     }
   }
 
   Future<List<Album>> fetchAlbums() async {
     try {
       final querySnapshot =
-          await FirebaseFirestore.instance.collection('albums').get();
+          await FirebaseFirestore.instance.collection(albumsCollection).get();
       final fetchedAlbums = querySnapshot.docs.map((doc) {
         final data = doc.data();
         return Album(
@@ -36,14 +43,16 @@ class FirebaseService {
 
       return fetchedAlbums;
     } catch (e) {
-      throw Exception('Error fetching album: $e');
+      final String message = "Failed to fetch album: $e";
+      logger.e(message);
+      throw Exception(message);
     }
   }
 
   Future<void> updateAlbum(Album updatedAlbum) async {
     try {
       await FirebaseFirestore.instance
-          .collection('albums')
+          .collection(albumsCollection)
           .doc(updatedAlbum.albumId)
           .set({
         'albumId': updatedAlbum.albumId,
@@ -51,14 +60,16 @@ class FirebaseService {
         'pictures': updatedAlbum.pictures,
       });
     } catch (e) {
-      throw Exception('Error updating album: $e');
+      final String message = "Failed to update album: $e";
+      logger.e(message);
+      throw Exception(message);
     }
   }
 
   Future<void> deleteAlbum(String albumId) async {
     try {
       await FirebaseFirestore.instance
-          .collection('albums')
+          .collection(albumsCollection)
           .doc(albumId)
           .delete()
           .then(
@@ -66,7 +77,9 @@ class FirebaseService {
             onError: (e) => logger.e("Error deleting album $e"),
           );
     } catch (e) {
-      throw Exception('Error deleting album: $e');
+      final String message = "Failed to delete album: $e";
+      logger.e(message);
+      throw Exception(message);
     }
   }
 
@@ -75,12 +88,12 @@ class FirebaseService {
     try {
       final storageRef = FirebaseStorage.instance.ref();
       final imageRef = storageRef.child(
-          "albums/$albumId/${DateTime.now().millisecondsSinceEpoch}.jpg");
+          "$albumsCollection/$albumId/${DateTime.now().millisecondsSinceEpoch}.jpg");
       await imageRef.putFile(imageFile);
       final imageUrl = await imageRef.getDownloadURL();
 
       final albumRef =
-          FirebaseFirestore.instance.collection("albums").doc(albumId);
+          FirebaseFirestore.instance.collection(albumsCollection).doc(albumId);
       final albumSnapshot = await albumRef.get();
 
       if (albumSnapshot.exists) {
@@ -97,7 +110,9 @@ class FirebaseService {
       }
       return imageUrl;
     } catch (e) {
-      throw Exception("Failed to upload image: $e");
+      final String message = "Failed to upload image: $e";
+      logger.e(message);
+      throw Exception(message);
     }
   }
 
@@ -105,7 +120,7 @@ class FirebaseService {
       String albumId, Map<String, Object> updatedAlbum) async {
     try {
       await FirebaseFirestore.instance
-          .collection('albums')
+          .collection(albumsCollection)
           .doc(albumId)
           .update(updatedAlbum)
           .then(
@@ -113,7 +128,9 @@ class FirebaseService {
             onError: (e) => logger.e("Error editing picture $e"),
           );
     } catch (e) {
-      throw Exception("Failed to delete image: $e");
+      final String message = "Failed to delete image: $e";
+      logger.e(message);
+      throw Exception(message);
     }
   }
 
@@ -122,7 +139,9 @@ class FirebaseService {
       final ref = FirebaseStorage.instance.ref(imageFile);
       await ref.delete();
     } catch (e) {
-      throw Exception("Failed to delete image: $e");
+      final String message = "Failed to delete image: $e";
+      logger.e(message);
+      throw Exception(message);
     }
   }
 }

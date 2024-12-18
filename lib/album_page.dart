@@ -23,6 +23,7 @@ class AlbumPage extends StatefulWidget {
 
 class _AlbumPageState extends State<AlbumPage> {
   final FirebaseService _firebaseService = FirebaseService();
+  final Common _common = Common();
   File? selectedFile;
   final picker = ImagePicker();
 
@@ -116,10 +117,13 @@ class _AlbumPageState extends State<AlbumPage> {
     final pickedFile = await picker.pickImage(source: img);
     if (pickedFile != null) {
       final imageFile = File(pickedFile.path);
-      uploadImageAndSave(imageFile);
+      if (await imageFile.exists()) {
+        uploadImageAndSave(imageFile);
+      } else {
+        _showSnackBar("File does not exist.");
+      }
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('No picture selected')));
+      _showSnackBar("No picture selected.");
     }
   }
 
@@ -139,7 +143,7 @@ class _AlbumPageState extends State<AlbumPage> {
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       items: [
-        buildMenuItem(
+        _common.buildMenuItem(
           text: 'Delete picture',
           icon: Icons.delete_outline,
           onTap: () {
@@ -184,9 +188,7 @@ class _AlbumPageState extends State<AlbumPage> {
         widget.album.pictures.remove(imageUrl);
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting picture: $e')),
-      );
+      _showSnackBar("Error deleting picture: $e");
     }
   }
 
@@ -203,11 +205,7 @@ class _AlbumPageState extends State<AlbumPage> {
           widget.album.albumId, updatedAlbum);
       logger.i("Image deleted successfully from Firestore.");
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text("Failed to delete image from Firebase Firestore: $e")),
-      );
+      _showSnackBar("Failed to delete image from Firebase Firestore: $e");
     }
   }
 
@@ -218,14 +216,9 @@ class _AlbumPageState extends State<AlbumPage> {
       await _firebaseService.deleteStorageImage(imageFile);
 
       logger.i("Image deleted successfully from Firebase Storage.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Image successfully deleted!")),
-      );
+      _showSnackBar("Image successfully deleted!");
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Failed to delete image from Firebase Storage: $e")),
-      );
+      _showSnackBar("Failed to delete image from Firebase Storage: $e");
     }
   }
 
@@ -239,14 +232,14 @@ class _AlbumPageState extends State<AlbumPage> {
       setState(() {
         widget.album.pictures = [...widget.album.pictures, imageUrl];
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Image uploaded successfully!")),
-      );
+      _showSnackBar("Image uploaded successfully!");
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to upload image: $e")),
-      );
+      _showSnackBar("Failed to upload image: $e");
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }

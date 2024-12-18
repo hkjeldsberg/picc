@@ -35,6 +35,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final FirebaseService _firebaseService = FirebaseService();
+  final Common _common = Common();
   List<Album> albums = [];
   final Uuid uuid = Uuid();
 
@@ -68,10 +69,7 @@ class _HomePageState extends State<HomePage> {
                     _addAlbum(albumName);
                     Navigator.of(context).pop();
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Album name cannot be empty')),
-                    );
+                    _showSnackBar('Album name cannot be empty');
                   }
                 },
                 child: const Text("Add"),
@@ -145,6 +143,7 @@ class _HomePageState extends State<HomePage> {
           )),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddAlbumDialog,
+        tooltip: 'Add new album',
         child: const Icon(Icons.add),
       ),
     );
@@ -165,14 +164,14 @@ class _HomePageState extends State<HomePage> {
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       items: [
-        buildMenuItem(
+        _common.buildMenuItem(
           text: 'Edit name',
           icon: Icons.edit,
           onTap: () {
             _showEditAlbumDialog(album);
           },
         ),
-        buildMenuItem(
+        _common.buildMenuItem(
           text: 'Delete album',
           icon: Icons.delete_outline,
           onTap: () {
@@ -207,10 +206,7 @@ class _HomePageState extends State<HomePage> {
                     _updateAlbum(context, album, albumName);
                     Navigator.of(context).pop();
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Album name cannot be empty')),
-                    );
+                    _showSnackBar('Album name cannot be empty');
                   }
                 },
                 child: const Text("Confirm"),
@@ -253,9 +249,7 @@ class _HomePageState extends State<HomePage> {
         albums = fetchedAlbums;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading albums: $e')),
-      );
+      _showSnackBar('Error loading albums: $e');
     }
   }
 
@@ -272,9 +266,7 @@ class _HomePageState extends State<HomePage> {
             updatedAlbum;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating album: $e')),
-      );
+      _showSnackBar('Error updating album: $e');
     }
   }
 
@@ -286,9 +278,7 @@ class _HomePageState extends State<HomePage> {
         albums.add(Album(albumId: albumId, albumName: albumName));
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding album: $e')),
-      );
+      _showSnackBar('Error adding album: $e');
     }
   }
 
@@ -299,9 +289,13 @@ class _HomePageState extends State<HomePage> {
         albums.remove(album);
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting album: $e')),
-      );
+      _showSnackBar('Error deleting album: $e');
     }
   }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
 }
