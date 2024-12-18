@@ -1,13 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 
 import 'album_page.dart';
+import 'common/common.dart';
 import 'model/album.dart';
+import 'services/firebase_service.dart';
 
-var logger = Logger(printer: PrettyPrinter(methodCount: 0));
+var logger = Logger(printer: SimplePrinter());
 
 void main() {
   runApp(const MyApp());
@@ -33,13 +34,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final FirebaseService _firebaseService = FirebaseService();
   List<Album> albums = [];
   final Uuid uuid = Uuid();
 
   @override
   void initState() {
     super.initState();
-    _fetchAlbums(); // Fetch albums on app startup
+    _loadAlbums();
   }
 
   void _showAddAlbumDialog() {
@@ -63,7 +65,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   final albumName = albumController.text.trim();
                   if (albumName.isNotEmpty) {
-                    _addAlbumToFirestore(albumName);
+                    _addAlbum(albumName);
                     Navigator.of(context).pop();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -148,47 +150,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _fetchAlbums() async {
-    try {
-      final querySnapshot =
-          await FirebaseFirestore.instance.collection('albums').get();
-      final fetchedAlbums = querySnapshot.docs.map((doc) {
-        final data = doc.data();
-        return Album(
-          albumId: data['albumId'],
-          albumName: data['albumName'],
-          pictures: List<String>.from(data['pictures'] ?? []),
-        );
-      }).toList();
-
-      setState(() {
-        albums = fetchedAlbums;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching albums: $e')),
-      );
-    }
-  }
-
-  Future<void> _addAlbumToFirestore(String albumName) async {
-    final albumId = uuid.v4();
-    try {
-      await FirebaseFirestore.instance.collection('albums').doc(albumId).set({
-        'albumId': albumId,
-        'albumName': albumName,
-        'pictures': [],
-      });
-      setState(() {
-        albums.add(Album(albumId: albumId, albumName: albumName));
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding album: $e')),
-      );
-    }
-  }
-
   Future<void> _showAlbumOptionsMenu(BuildContext context, Album album) async {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
@@ -204,14 +165,14 @@ class _HomePageState extends State<HomePage> {
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       items: [
-        _buildMenuItem(
+        buildMenuItem(
           text: 'Edit name',
           icon: Icons.edit,
           onTap: () {
             _showEditAlbumDialog(album);
           },
         ),
-        _buildMenuItem(
+        buildMenuItem(
           text: 'Delete album',
           icon: Icons.delete_outline,
           onTap: () {
@@ -220,46 +181,6 @@ class _HomePageState extends State<HomePage> {
         ),
       ],
     );
-  }
-
-  PopupMenuItem _buildMenuItem({
-    required String text,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return PopupMenuItem(
-      onTap: onTap,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(text, style: const TextStyle(fontSize: 16)),
-          Icon(icon, size: 20, color: Colors.black54),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _updateAlbumName(
-      BuildContext context, Album album, String updatedAlbumName) async {
-    final albumId = album.albumId;
-    final pictures = album.pictures;
-    final updatedAlbum = Album(
-        albumName: updatedAlbumName, albumId: albumId, pictures: pictures);
-    try {
-      await FirebaseFirestore.instance.collection('albums').doc(albumId).set({
-        'albumId': albumId,
-        'albumName': updatedAlbumName,
-        'pictures': pictures,
-      });
-      setState(() {
-        albums[albums.indexWhere((e) => e.albumId == updatedAlbum.albumId)] =
-            updatedAlbum;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error editing album: $e')),
-      );
-    }
   }
 
   void _showEditAlbumDialog(Album album) {
@@ -283,7 +204,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   final albumName = albumController.text.trim();
                   if (albumName.isNotEmpty) {
-                    _updateAlbumName(context, album, albumName);
+                    _updateAlbum(context, album, albumName);
                     Navigator.of(context).pop();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -325,18 +246,55 @@ class _HomePageState extends State<HomePage> {
         });
   }
 
-  Future<void> _deleteAlbum(Album album) async {
-    final albumId = album.albumId;
+  Future<void> _loadAlbums() async {
     try {
-      await FirebaseFirestore.instance
-          .collection('albums')
-          .doc(albumId)
-          .delete()
-          .then(
-            (doc) => logger.i("Album $albumId deleted"),
-            onError: (e) => logger.e("Error deleting album $e"),
-          );
+      final fetchedAlbums = await _firebaseService.fetchAlbums();
+      setState(() {
+        albums = fetchedAlbums;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading albums: $e')),
+      );
+    }
+  }
 
+  Future<void> _updateAlbum(
+      BuildContext context, Album album, String updatedAlbumName) async {
+    final albumId = album.albumId;
+    final pictures = album.pictures;
+    final updatedAlbum = Album(
+        albumName: updatedAlbumName, albumId: albumId, pictures: pictures);
+    try {
+      await _firebaseService.updateAlbum(updatedAlbum);
+      setState(() {
+        albums[albums.indexWhere((e) => e.albumId == updatedAlbum.albumId)] =
+            updatedAlbum;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating album: $e')),
+      );
+    }
+  }
+
+  Future<void> _addAlbum(String albumName) async {
+    final albumId = uuid.v4();
+    try {
+      await _firebaseService.addAlbum(albumId, albumName);
+      setState(() {
+        albums.add(Album(albumId: albumId, albumName: albumName));
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding album: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteAlbum(Album album) async {
+    try {
+      await _firebaseService.deleteAlbum(album.albumId);
       setState(() {
         albums.remove(album);
       });

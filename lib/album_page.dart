@@ -1,13 +1,16 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 
+import 'common/common.dart';
 import 'model/album.dart';
 import 'picture_page.dart';
+import 'services/firebase_service.dart';
+
+var logger = Logger(printer: SimplePrinter());
 
 class AlbumPage extends StatefulWidget {
   final Album album;
@@ -19,54 +22,9 @@ class AlbumPage extends StatefulWidget {
 }
 
 class _AlbumPageState extends State<AlbumPage> {
+  final FirebaseService _firebaseService = FirebaseService();
   File? selectedFile;
   final picker = ImagePicker();
-
-  Future<void> uploadImageAndSave(File imageFile) async {
-    final String albumId = widget.album.albumId;
-
-    try {
-      // Upload image to Firebase Storage
-      final storageRef = FirebaseStorage.instance.ref();
-      final imageRef = storageRef.child(
-          "albums/$albumId/${DateTime.now().millisecondsSinceEpoch}.jpg");
-      await imageRef.putFile(imageFile);
-      final imageUrl = await imageRef.getDownloadURL();
-
-      // Update Firestore album document
-      final albumRef =
-          FirebaseFirestore.instance.collection("albums").doc(albumId);
-      final albumSnapshot = await albumRef.get();
-
-      if (albumSnapshot.exists) {
-        // Append image URL to existing pictures
-        final images =
-            List<String>.from(albumSnapshot.data()?['pictures'] ?? []);
-        images.add(imageUrl);
-        await albumRef.update({'pictures': images});
-      } else {
-        // Create a new document if it doesn't exist
-        await albumRef.set({
-          'albumId': albumId,
-          'albumName': widget.album.albumName,
-          'pictures': [imageUrl],
-        });
-      }
-
-      // Update local state
-      setState(() {
-        widget.album.pictures = [...widget.album.pictures, imageUrl];
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Image uploaded successfully!")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to upload image: $e")),
-      );
-    }
-  }
 
   void _showPicker({required BuildContext context}) {
     showModalBottomSheet(
@@ -110,6 +68,7 @@ class _AlbumPageState extends State<AlbumPage> {
           mainAxisSpacing: 8,
           children: widget.album.pictures.map<Widget>((imageUrl) {
             return GestureDetector(
+              onLongPress: () => _showPictureOptionsMenu(context, imageUrl),
               onTap: () {
                 Navigator.push(
                     context,
@@ -161,6 +120,133 @@ class _AlbumPageState extends State<AlbumPage> {
     } else {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('No picture selected')));
+    }
+  }
+
+  Future<void> _showPictureOptionsMenu(
+      BuildContext context, String imageUrl) async {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(
+          overlay.localToGlobal(Offset.zero),
+          overlay.localToGlobal(Offset.zero),
+        ),
+        Offset.zero & overlay.size,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
+        buildMenuItem(
+          text: 'Delete picture',
+          icon: Icons.delete_outline,
+          onTap: () {
+            _showDeletePictureDialog(imageUrl);
+          },
+        ),
+      ],
+    );
+  }
+
+  void _showDeletePictureDialog(String imageUrl) {
+    logger.d("Deleting picture");
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Delete picture?"),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Cancel")),
+              TextButton(
+                onPressed: () {
+                  _deleteImage(imageUrl);
+                  Navigator.of(context).pop();
+                },
+                child: const Text("Confirm"),
+              ),
+            ],
+          );
+        });
+  }
+
+  Future<void> _deleteImage(String imageUrl) async {
+    try {
+      _deleteImageFromFirestore(imageUrl);
+      _deleteImageFromFirebaseStorage(imageUrl);
+
+      setState(() {
+        widget.album.pictures.remove(imageUrl);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting picture: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteImageFromFirestore(String imageUrl) async {
+    widget.album.pictures.remove(imageUrl);
+
+    final updatedAlbum = {
+      'albumId': widget.album.albumId,
+      'albumName': widget.album.albumName,
+      'pictures': widget.album.pictures
+    };
+    try {
+      await _firebaseService.deleteFirestoreImage(
+          widget.album.albumId, updatedAlbum);
+      logger.i("Image deleted successfully from Firestore.");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text("Failed to delete image from Firebase Firestore: $e")),
+      );
+    }
+  }
+
+  Future<void> _deleteImageFromFirebaseStorage(String imageUrl) async {
+    final String imageFile =
+        imageUrl.split("/o/")[1].replaceAll("%2F", "/").split("?")[0];
+    try {
+      await _firebaseService.deleteStorageImage(imageFile);
+
+      logger.i("Image deleted successfully from Firebase Storage.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Image successfully deleted!")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Failed to delete image from Firebase Storage: $e")),
+      );
+    }
+  }
+
+  Future<void> uploadImageAndSave(File imageFile) async {
+    final String albumId = widget.album.albumId;
+
+    try {
+      final imageUrl = await _firebaseService.uploadImageAndSave(
+          albumId, widget.album.albumName, imageFile);
+
+      setState(() {
+        widget.album.pictures = [...widget.album.pictures, imageUrl];
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Image uploaded successfully!")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to upload image: $e")),
+      );
     }
   }
 }

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class PicturePage extends StatelessWidget {
   final String imageUrl;
 
-  const PicturePage({Key? key, required this.imageUrl}) : super(key: key);
+  const PicturePage({super.key, required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class PicturePage extends StatelessWidget {
       ),
       body: Center(
         child: InteractiveViewer(
-          panEnabled: false,
+          panEnabled: true,
           minScale: 1,
           maxScale: 10,
           child: Hero(
